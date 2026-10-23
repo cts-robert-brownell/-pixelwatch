@@ -1,27 +1,27 @@
 [
   {
     "title": "Super Comb",
-    "iconUrl": "https://github.com/cts-robert-brownell/-pixelwatch/blob/91cc2ddbfdf635471daad10b282e2dca2837c730/1.png",
+    "iconUrl": "https://raw.githubusercontent.com/cts-robert-brownell/-pixelwatch/main/1.png",
     "intent": "com.nmz.drink.super"
   },
   {
     "title": "Ranging Pot",
-    "iconUrl": "https://github.com/cts-robert-brownell/-pixelwatch/blob/91cc2ddbfdf635471daad10b282e2dca2837c730/1.png",
+    "iconUrl": "https://raw.githubusercontent.com/cts-robert-brownell/-pixelwatch/main/1.png",
     "intent": "com.nmz.drink.ranging"
   },
   {
     "title": "Magic Pot",
-    "iconUrl": "https://github.com/cts-robert-brownell/-pixelwatch/blob/91cc2ddbfdf635471daad10b282e2dca2837c730/1.png",
+    "iconUrl": "https://raw.githubusercontent.com/cts-robert-brownell/-pixelwatch/main/1.png",
     "intent": "com.nmz.drink.magic"
   },
   {
     "title": "Overload",
-    "iconUrl": "https://github.com/cts-robert-brownell/-pixelwatch/blob/91cc2ddbfdf635471daad10b282e2dca2837c730/1.png",
+    "iconUrl": "https://raw.githubusercontent.com/cts-robert-brownell/-pixelwatch/main/1.png",
     "intent": "com.nmz.drink.overload"
   },
   {
     "title": "Absorptions",
-    "iconUrl": "https://github.com/cts-robert-brownell/-pixelwatch/blob/91cc2ddbfdf635471daad10b282e2dca2837c730/1.png",
+    "iconUrl": "https://raw.githubusercontent.com/cts-robert-brownell/-pixelwatch/main/1.png",
     "intent": "com.nmz.drink.absorption"
   }
 ]
