@@ -1,27 +1,40 @@
-[
-  {
-    "title": "Super Comb",
-    "iconUrl": "https://raw.githubusercontent.com/cts-robert-brownell/-pixelwatch/main/1.png",
-    "intent": "com.nmz.drink.super"
+
+{
+  "menuColors": {
+    "main": "#0f172a",
+    "potions": "#1e1b4b",
+    "teleports": "#022c22"
   },
-  {
-    "title": "Ranging Pot",
-    "iconUrl": "https://raw.githubusercontent.com/cts-robert-brownell/-pixelwatch/main/1.png",
-    "intent": "com.nmz.drink.ranging"
-  },
-  {
-    "title": "Magic Pot",
-    "iconUrl": "https://raw.githubusercontent.com/cts-robert-brownell/-pixelwatch/main/1.png",
-    "intent": "com.nmz.drink.magic"
-  },
-  {
-    "title": "Overload",
-    "iconUrl": "https://raw.githubusercontent.com/cts-robert-brownell/-pixelwatch/main/1.png",
-    "intent": "com.nmz.drink.overload"
-  },
-  {
-    "title": "Absorptions",
-    "iconUrl": "https://raw.githubusercontent.com/cts-robert-brownell/-pixelwatch/main/1.png",
-    "intent": "com.nmz.drink.absorption"
-  }
-]
+  "items": [
+    {
+      "menu": "main",
+      "title": "Potions",
+      "iconUrl": "https://raw.githubusercontent.com/cts-robert-brownell/-pixelwatch/main/1.png",
+      "targetMenu": "potions"
+    },
+    {
+      "menu": "main",
+      "title": "Teleports",
+      "iconUrl": "https://raw.githubusercontent.com/cts-robert-brownell/-pixelwatch/main/1.png",
+      "targetMenu": "teleports"
+    },
+    {
+      "menu": "potions",
+      "title": "Super Comb",
+      "iconUrl": "https://raw.githubusercontent.com/cts-robert-brownell/-pixelwatch/main/1.png",
+      "intent": "com.nmz.drink.super"
+    },
+    {
+      "menu": "potions",
+      "title": "Ranging Pot",
+      "iconUrl": "https://raw.githubusercontent.com/cts-robert-brownell/-pixelwatch/main/1.png",
+      "intent": "com.nmz.drink.ranging"
+    },
+    {
+      "menu": "teleports",
+      "title": "Home Tele",
+      "iconUrl": "https://raw.githubusercontent.com/cts-robert-brownell/-pixelwatch/main/1.png",
+      "intent": "com.teleport.home"
+    }
+  ]
+}
