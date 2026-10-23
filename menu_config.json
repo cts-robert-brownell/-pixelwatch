@@ -1,9 +1,9 @@
 
 {
   "menuColors": {
-    "main": "#0f172a",
-    "potions": "#1e1b4b",
-    "teleports": "#022c22"
+    "main": "#9da832",
+    "potions": "#00fffb",
+    "teleports": "#ff00fb"
   },
   "items": [
     {
