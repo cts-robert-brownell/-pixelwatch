@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Watch 4 - Custom Radial Menu & Watch Face</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        /* Watch Circular Viewport Simulation */
+        .watch-screen {
+            width: 340px;
+            height: 340px;
+            border-radius: 50%;
+            background: #000000;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 0 12px #1e293b, 0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 0 30px rgba(255, 255, 255, 0.05);
+        }
+        /* Custom scrollbar for any overflow */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Header Description -->
+    <div class="mb-6 text-center max-w-md">
+        <h1 class="text-xl font-bold text-cyan-400">Pixel Watch 4 Interface</h1>
+        <p class="text-xs text-slate-400 mt-1">Tap watch buttons or open the Radial Menu. Drag the center selector ring toward any slice and release to trigger actions or navigate submenus.</p>
+    </div>
+
+    <!-- Smartwatch Container -->
+    <div class="watch-screen flex flex-col justify-between p-6 relative" id="watchContainer">
+        
+        <!-- ================= VIEW 1: NORMAL WATCH FACE ================= -->
+        <div id="watchFaceView" class="absolute inset-0 flex flex-col justify-between p-6 z-10 bg-black/90 transition-opacity duration-300">
+            <!-- Top Status Bar -->
+            <div class="flex justify-between items-center text-[10px] text-slate-400 font-medium tracking-wider">
+                <span id="watchBattery">🔋 84%</span>
+                <span id="watchDate">THU OCT 22</span>
+                <span class="text-cyan-400">BT CON</span>
+            </div>
+
+            <!-- Center Time Display -->
+            <div class="text-center my-auto">
+                <div id="watchTime" class="text-4xl font-bold tracking-tight text-white">10:42</div>
+                <div class="text-[11px] text-slate-400 mt-1">NMZ Auto Clicker Ready</div>
+            </div>
+
+            <!-- Two Arbitrary Intent Buttons + Radial Menu Trigger -->
+            <div class="grid grid-cols-3 gap-2 items-center">
+                <button onclick="sendIntent('com.watch.button1Intent')" 
+                    class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-cyan-300 text-[11px] font-semibold py-2 px-1 rounded-xl border border-slate-700 transition shadow-sm truncate">
+                    Btn 1
+                </button>
+                <button onclick="switchToRadialMenu()" 
+                    class="bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white text-[11px] font-bold py-2 px-1 rounded-xl shadow-lg shadow-cyan-900/50 transition">
+                    Radial
+                </button>
+                <button onclick="sendIntent('com.watch.button2Intent')" 
+                    class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-cyan-300 text-[11px] font-semibold py-2 px-1 rounded-xl border border-slate-700 transition shadow-sm truncate">
+                    Btn 2
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= VIEW 2: ARK RADIAL MENU ================= -->
+        <div id="radialMenuView" class="absolute inset-0 flex flex-col justify-between p-4 z-20 bg-slate-950/95 opacity-0 pointer-events-none transition-opacity duration-300">
+            
+            <!-- Top Navigation & Title -->
+            <div class="flex justify-between items-center px-2 mt-1">
+                <button onclick="goBackMenu()" id="backBtn" class="text-slate-400 hover:text-white text-xs px-2 py-1 bg-slate-800/80 rounded-lg border border-slate-700 transition opacity-50 cursor-not-allowed" disabled>
+                    ◀ Back
+                </button>
+                <span id="menuTitle" class="text-xs font-bold text-cyan-300 tracking-wide uppercase">Main Menu</span>
+                <button onclick="switchToWatchFace()" class="text-slate-400 hover:text-white text-xs px-2 py-1 bg-slate-800/80 rounded-lg border border-slate-700 transition">
+                    ✕ Exit
+                </button>
+            </div>
+
+            <!-- Radial Canvas & Touch Area -->
+            <div id="radialTouchArea" class="relative w-full flex-1 flex items-center justify-center cursor-crosshair">
+                <svg id="radialSvg" class="w-full h-full overflow-visible" viewBox="-120 -120 240 240">
+                    <!-- Slices and Icons rendered dynamically via JS -->
+                </svg>
+
+                <!-- Draggable Center Thumb (Spring Snap-Back) -->
+                <div id="selectorThumb" class="absolute w-10 h-10 -ml-5 -mt-5 rounded-full bg-cyan-500/80 border-2 border-white shadow-lg shadow-cyan-500/50 flex items-center justify-center pointer-events-none transition-transform duration-75">
+                    <div class="w-2.5 h-2.5 bg-white rounded-full"></div>
+                </div>
+            </div>
+
+            <!-- Bottom Hint -->
+            <div class="text-center text-[10px] text-slate-400 mb-1">
+                Drag to edge & release to select
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Intent Dispatch Log / Notification Toast -->
+    <div class="mt-6 w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
+        <div class="flex justify-between items-center mb-2">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Intent Broadcast & Macro Log</span>
+            <button onclick="clearLog()" class="text-[10px] text-slate-500 hover:text-slate-300 transition">Clear</button>
+        </div>
+        <div id="intentLog" class="h-28 overflow-y-auto font-mono text-xs text-cyan-400 space-y-1 bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
+            <div class="text-slate-600 italic">// Intents sent to Tasker / MacroDroid will appear here...</div>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // ================= MODULAR DATA STRUCTURE =================
+        // Structured using { menudirectory, title, imagepath, intent } as requested
+        const menuDirectoryTree = {
+            title: "Main Menu",
+            menudirectory: [
+                {
+                    title: "Combat Pots",
+                    imagepath: "⚔️",
+                    menudirectory: [
+                        { title: "Super Comb", imagepath: "🧪", intent: "com.nmz.drink.super" },
+                        { title: "Ranging Pot", imagepath: "🏹", intent: "com.nmz.drink.ranging" },
+                        { title: "Magic Pot",   imagepath: "🔮", intent: "com.nmz.drink.magic" },
+                        { title: "Overload",    imagepath: "💀", intent: "com.nmz.drink.overload" }
+                    ]
+                },
+                {
+                    title: "Absorption",
+                    imagepath: "🛡️",
+                    menudirectory: [
+                        { title: "4-Dose Mode", imagepath: "4️⃣", intent: "com.nmz.mode.4" },
+                        { title: "6-Dose Mode", imagepath: "6️⃣", intent: "com.nmz.mode.6" },
+                        { title: "8-Dose Mode", imagepath: "8️⃣", intent: "com.nmz.mode.8" }
+                    ]
+                },
+                {
+                    title: "Quick Actions",
+                    imagepath: "⚡",
+                    menudirectory: [
+                        { title: "Toggle Click", imagepath: "🤖", intent: "com.nmz.toggle" },
+                        { title: "Force Screen", imagepath: "🔄", intent: "com.nmz.refresh" },
+                        { title: "Reset State",  imagepath: "⏹️", intent: "com.nmz.reset" }
+                    ]
+                },
+                {
+                    title: "Settings",
+                    imagepath: "⚙️",
+                    intent: "com.watch.settings"
+                }
+            ]
+        };
+
+        // Navigation state stack
+        let navigationStack = [menuDirectoryTree];
+        let currentMenu = menuDirectoryTree;
+
+        // UI Clock & Battery updater
+        function updateWatchClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const mins = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('watchTime').innerText = `${hours}:${mins}`;
+            
+            const options = { weekday: 'short', month: 'short', day: 'numeric' };
+            document.getElementById('watchDate').innerText = now.toLocaleDateString('en-US', options).toUpperCase();
+        }
+        setInterval(updateWatchClock, 1000);
+        updateWatchClock();
+
+        // Intent Dispatcher Simulation
+        function sendIntent(intentString) {
+            const logContainer = document.getElementById('intentLog');
+            const time = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = "border-b border-slate-900 pb-1 flex justify-between items-center";
+            logEntry.innerHTML = `<span><span class="text-slate-500">[${time}]</span> <span class="text-green-400">SEND</span> ${intentString}</span> <span class="text-[10px] bg-cyan-950 text-cyan-300 px-1.5 py-0.5 rounded">Broadcast</span>`;
+            logContainer.prepend(logEntry);
+
+            // Visual feedback on watch face
+            showToastPopup(intentString.split('.').pop());
+        }
+
+        function clearLog() {
+            document.getElementById('intentLog').innerHTML = '<div class="text-slate-600 italic">// Log cleared.</div>';
+        }
+
+        function showToastPopup(msg) {
+            const toast = document.createElement('div');
+            toast.className = "absolute top-2 left-1/2 -translate-x-1/2 bg-cyan-600 text-white text-[10px] font-bold py-1 px-3 rounded-full shadow-lg z-50 transition-all duration-300 animate-bounce";
+            toast.innerText = `Intent: ${msg}`;
+            document.getElementById('watchContainer').appendChild(toast);
+            setTimeout(() => toast.remove(), 1800);
+        }
+
+        // View Switching
+        function switchToRadialMenu() {
+            document.getElementById('watchFaceView').classList.add('opacity-0', 'pointer-events-none');
+            document.getElementById('radialMenuView').classList.remove('opacity-0', 'pointer-events-none');
+            renderRadialMenu();
+        }
+
+        function switchToWatchFace() {
+            document.getElementById('radialMenuView').classList.add('opacity-0', 'pointer-events-none');
+            document.getElementById('watchFaceView').classList.remove('opacity-0', 'pointer-events-none');
+        }
+
+        function goBackMenu() {
+            if (navigationStack.length > 1) {
+                navigationStack.pop();
+                currentMenu = navigationStack[navigationStack.length - 1];
+                renderRadialMenu();
+            }
+        }
+
+        // ================= ARK RADIAL MENU RENDERING & PHYSICS =================
+        const svg = document.getElementById('radialSvg');
+        const touchArea = document.getElementById('radialTouchArea');
+        const thumb = document.getElementById('selectorThumb');
+
+        let isDragging = false;
+        let centerPos = { x: 0, y: 0 };
+        let thumbPos = { x: 0, y: 0 };
+        let targetThumbPos = { x: 0, y: 0 };
+        let activeSliceIndex = -1;
+        let animFrameId = null;
+
+        function renderRadialMenu() {
+            svg.innerHTML = '';
+            document.getElementById('menuTitle').innerText = currentMenu.title;
+            
+            const backBtn = document.getElementById('backBtn');
+            if (navigationStack.length > 1) {
+                backBtn.disabled = false;
+                backBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                backBtn.disabled = true;
+                backBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+
+            const items = currentMenu.menudirectory || [];
+            const count = items.length;
+            if (count === 0) return;
+
+            const outerRadius = 95;
+            const innerRadius = 35;
+            const angleStep = (Math.PI * 2) / count;
+
+            items.forEach((item, index) => {
+                const startAngle = index * angleStep - Math.PI / 2 - angleStep / 2;
+                const endAngle = (index + 1) * angleStep - Math.PI / 2 - angleStep / 2;
+
+                const x1 = Math.cos(startAngle) * outerRadius;
+                const y1 = Math.sin(startAngle) * outerRadius;
+                const x2 = Math.cos(endAngle) * outerRadius;
+                const y2 = Math.sin(endAngle) * outerRadius;
+
+                const ix1 = Math.cos(endAngle) * innerRadius;
+                const iy1 = Math.sin(endAngle) * innerRadius;
+                const ix2 = Math.cos(startAngle) * innerRadius;
+                const iy2 = Math.sin(startAngle) * innerRadius;
+
+                const largeArc = angleStep > Math.PI ? 1 : 0;
+
+                const pathData = [
+                    `M ${ix2} ${iy2}`,
+                    `L ${x1} ${y1}`,
+                    `A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${x2} ${y2}`,
+                    `L ${ix1} ${iy1}`,
+                    `A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${ix2} ${iy2}`,
+                    `Z`
+                ].join(' ');
+
+                // Calculate icon / label midpoint angle
+                const midAngle = startAngle + angleStep / 2;
+                const labelRadius = 65;
+                const lx = Math.cos(midAngle) * labelRadius;
+                const ly = Math.sin(midAngle) * labelRadius;
+
+                // Slice group
+                const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                g.setAttribute('id', `slice-${index}`);
+                g.classList.add('transition-all', 'duration-150');
+
+                // Slice background path
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute('d', pathData);
+                path.setAttribute('fill', '#1e293b');
+                path.setAttribute('stroke', '#334155');
+                path.setAttribute('stroke-width', '1.5');
+                path.setAttribute('class', 'slice-path transition-colors duration-150');
+
+                // Icon / Emoji text
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute('x', lx);
+                text.setAttribute('y', ly);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('dominant-baseline', 'central');
+                text.setAttribute('class', 'text-base font-semibold select-none');
+                text.textContent = item.imagepath || '🔹';
+
+                // Small subtitle label
+                const subtext = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                subtext.setAttribute('x', lx);
+                subtext.setAttribute('y', ly + 14);
+                subtext.setAttribute('text-anchor', 'middle');
+                subtext.setAttribute('dominant-baseline', 'central');
+                subtext.setAttribute('class', 'text-[8px] fill-slate-300 font-medium select-none');
+                subtext.textContent = item.title.length > 9 ? item.title.substring(0, 8) + '..' : item.title;
+
+                g.appendChild(path);
+                g.appendChild(text);
+                g.appendChild(subtext);
+                svg.appendChild(g);
+            });
+        }
+
+        // Center Thumb Spring Animation Loop
+        function updateThumbPhysics() {
+            if (!isDragging) {
+                // Spring back smoothly to center (0, 0)
+                thumbPos.x += (0 - thumbPos.x) * 0.25;
+                thumbPos.y += (0 - thumbPos.y) * 0.25;
+            } else {
+                // Smooth follow towards target touch position
+                thumbPos.x += (targetThumbPos.x - thumbPos.x) * 0.35;
+                thumbPos.y += (targetThumbPos.y - thumbPos.y) * 0.35;
+            }
+
+            thumb.style.transform = `translate(${thumbPos.x}px, ${thumbPos.y}px)`;
+
+            // Boundary & Slice Detection
+            const dist = Math.sqrt(thumbPos.x * thumbPos.x + thumbPos.y * thumbPos.y);
+            const deadzone = 25; // Deadzone radius before selecting a slice
+
+            let newActiveIndex = -1;
+            const items = currentMenu.menudirectory || [];
+
+            if (dist > deadzone && items.length > 0) {
+                let angle = Math.atan2(thumbPos.y, thumbPos.x); // -PI to PI
+                // Normalize angle to [0, 2*PI] starting from top (-PI/2)
+                angle += Math.PI / 2;
+                if (angle < 0) angle += Math.PI * 2;
+
+                const angleStep = (Math.PI * 2) / items.length;
+                newActiveIndex = Math.floor((angle + angleStep / 2) / angleStep) % items.length;
+            }
+
+            if (newActiveIndex !== activeSliceIndex) {
+                // Reset previous active slice
+                if (activeSliceIndex !== -1) {
+                    const prevSlice = document.getElementById(`slice-${activeSliceIndex}`);
+                    if (prevSlice) {
+                        prevSlice.querySelector('path').setAttribute('fill', '#1e293b');
+                        prevSlice.querySelector('path').setAttribute('stroke', '#334155');
+                        prevSlice.classList.remove('scale-105');
+                    }
+                }
+                activeSliceIndex = newActiveIndex;
+                // Highlight new active slice
+                if (activeSliceIndex !== -1) {
+                    const currSlice = document.getElementById(`slice-${activeSliceIndex}`);
+                    if (currSlice) {
+                        currSlice.querySelector('path').setAttribute('fill', '#0891b2'); // Cyan active fill
+                        currSlice.querySelector('path').setAttribute('stroke', '#38bdf8'); // Bright cyan outline
+                        currSlice.classList.add('scale-105');
+                    }
+                }
+            }
+
+            animFrameId = requestAnimationFrame(updateThumbPhysics);
+        }
+
+        // Touch & Mouse Handlers for Radial Menu
+        function handleDragStart(e) {
+            isDragging = true;
+            const rect = touchArea.getBoundingClientRect();
+            centerPos.x = rect.left + rect.width / 2;
+            centerPos.y = rect.top + rect.height / 2;
+            updateTargetPos(e);
+            if (!animFrameId) updateThumbPhysics();
+        }
+
+        function handleDragMove(e) {
+            if (!isDragging) return;
+            updateTargetPos(e);
+        }
+
+        function handleDragEnd(e) {
+            if (!isDragging) return;
+            isDragging = false;
+
+            // If a slice was selected on release, execute action or navigate submenu
+            if (activeSliceIndex !== -1) {
+                const selectedItem = currentMenu.menudirectory[activeSliceIndex];
+                if (selectedItem) {
+                    if (selectedItem.menudirectory) {
+                        // Push to submenu stack
+                        navigationStack.push(selectedItem);
+                        currentMenu = selectedItem;
+                        renderRadialMenu();
+                    } else if (selectedItem.intent) {
+                        // Dispatch intent
+                        sendIntent(selectedItem.intent);
+                        switchToWatchFace();
+                    }
+                }
+            }
+
+            // Reset active highlight
+            if (activeSliceIndex !== -1) {
+                const slice = document.getElementById(`slice-${activeSliceIndex}`);
+                if (slice) {
+                    slice.querySelector('path').setAttribute('fill', '#1e293b');
+                    slice.querySelector('path').setAttribute('stroke', '#334155');
+                }
+                activeSliceIndex = -1;
+            }
+        }
+
+        function updateTargetPos(e) {
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            let dx = clientX - centerPos.x;
+            let dy = clientY - centerPos.y;
+
+            // Clamp max drag radius to keep thumb inside watch screen
+            const maxRadius = 100;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > maxRadius) {
+                dx = (dx / dist) * maxRadius;
+                dy = (dy / dist) * maxRadius;
+            }
+
+            targetThumbPos.x = dx;
+            targetThumbPos.y = dy;
+        }
+
+        // Event Listeners for Touch and Mouse
+        touchArea.addEventListener('mousedown', handleDragStart);
+        window.addEventListener('mousemove', handleDragMove);
+        window.addEventListener('mouseup', handleDragEnd);
+
+        touchArea.addEventListener('touchstart', handleDragStart, { passive: true });
+        window.addEventListener('touchmove', handleDragMove, { passive: true });
+        window.addEventListener('touchend', handleDragEnd);
+
+        // Initial render
+        renderRadialMenu();
+    </script>
+</body>
+</html>
